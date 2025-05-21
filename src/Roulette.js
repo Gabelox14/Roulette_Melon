@@ -23,32 +23,42 @@ const Roulette = () => {
   }, []);
 
   const drawWheel = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const size = 300;
-    const center = size / 2;
-    const angle = (2 * Math.PI) / prizes.length;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = 300;
+  const center = size / 2;
+  const angle = (2 * Math.PI) / prizes.length;
 
-    ctx.clearRect(0, 0, size, size);
+  ctx.clearRect(0, 0, size, size);
 
-    for (let i = 0; i < prizes.length; i++) {
-      ctx.beginPath();
-      ctx.fillStyle = colors[i % colors.length];
-      ctx.moveTo(center, center);
-      ctx.arc(center, center, center, angle * i, angle * (i + 1));
-      ctx.fill();
+  for (let i = 0; i < prizes.length; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.moveTo(center, center);
 
-      ctx.save();
-      ctx.translate(center, center);
-      ctx.rotate(angle * i + angle / 2);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#1f1f1f';
-      ctx.font = '14px Arial';
-      ctx.fillText(prizes[i], center - 10, 5);
-      ctx.restore();
-    }
-  };
+    // Rota -90° todo el dibujo (para que 0 empiece arriba)
+    ctx.arc(
+      center,
+      center,
+      center,
+      angle * i - Math.PI / 2,
+      angle * (i + 1) - Math.PI / 2
+    );
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(angle * i + angle / 2 - Math.PI / 2); // Rota el texto también -90°
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#1f1f1f';
+    ctx.font = '14px Arial';
+    ctx.fillText(prizes[i], center - 10, 5);
+    ctx.restore();
+  }
+};
+
+
 
   const setCookie = (name, value, days) => {
     const d = new Date();
@@ -62,25 +72,32 @@ const Roulette = () => {
     if (parts.length === 2) return parts.pop().split(';').shift();
   };
 
-  const spin = () => {
-    if (hasSpun || spinning) return;
-    setSpinning(true);
+const spin = () => {
+  if (hasSpun || spinning) return;
+  setSpinning(true);
 
-    const randomIndex = Math.floor(Math.random() * prizes.length);
-    const anglePerPrize = 360 / prizes.length;
-    const targetAngle = 360 * 5 + (360 - anglePerPrize * randomIndex - anglePerPrize / 2); // correct pointer
-    setRotationDeg(targetAngle);
+  const randomIndex = Math.floor(Math.random() * prizes.length);
+  const anglePerPrize = 360 / prizes.length;
 
-    setTimeout(() => {
-      const prize = prizes[randomIndex];
-      setSelectedPrize(prize);
-      setHasSpun(true);
-      localStorage.setItem('hasSpun', 'true');
-      localStorage.setItem('selectedPrize', prize);
-      setCookie('hasSpun', true, 365);
-      setSpinning(false);
-    }, 4000);
-  };
+  // Corregido: resta para que el premio quede alineado con el puntero arriba
+  const targetAngle = 360 * 5 - (anglePerPrize * randomIndex + anglePerPrize / 2);
+  setRotationDeg(targetAngle);
+
+  setTimeout(() => {
+    const prize = prizes[randomIndex];
+    setSelectedPrize(prize);
+    setHasSpun(true);
+    localStorage.setItem('hasSpun', 'true');
+    localStorage.setItem('selectedPrize', prize);
+    setCookie('hasSpun', true, 365);
+    setSpinning(false);
+  }, 4000);
+};
+
+
+
+
+
 
   return (
     <div style={styles.container}>
